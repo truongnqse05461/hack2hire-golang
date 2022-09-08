@@ -6,10 +6,11 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"github.com/Shopify/sarama"
 	"io/ioutil"
 	"log"
 	"strings"
+
+	"github.com/Shopify/sarama"
 )
 
 type Event struct {
