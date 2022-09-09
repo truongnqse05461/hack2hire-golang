@@ -13,6 +13,7 @@ func main() {
 	}
 
 	reader := queue.NewReader(config)
+	defer func() { _ = reader.Close() }()
 
 	queue.ConsumeMessages(context.Background(), reader)
 

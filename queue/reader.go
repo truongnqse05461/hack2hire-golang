@@ -26,20 +26,21 @@ func NewReader(config config.Conf) *kafka.Reader {
 		}
 	}
 	return kafka.NewReader(kafka.ReaderConfig{
-		Brokers: strings.Split(config.KafkaBrokers, ","),
-		GroupID: config.KafkaConsumerGroup,
-		Topic:   config.KafkaTopic,
-		Dialer:  dialer,
+		Brokers:     strings.Split(config.KafkaBrokers, ","),
+		GroupID:     config.KafkaConsumerGroup,
+		Topic:       config.KafkaTopic,
+		StartOffset: kafka.LastOffset,
+		Dialer:      dialer,
 	})
 }
 
 func ConsumeMessages(ctx context.Context, reader *kafka.Reader) {
 	log.Println("start listening to events ...")
 	for {
-		m, err := reader.ReadMessage(context.Background())
+		m, err := reader.ReadMessage(ctx)
 		if err != nil {
 			_ = fmt.Errorf("error %v", err)
 		}
-		fmt.Printf("receive event %s\n", string(m.Value))
+		fmt.Printf("receive event on broker %s, topic %s, partition %d, offset %d, data %s\n", reader.Config().Brokers, m.Topic, m.Partition, m.Offset, string(m.Value))
 	}
 }

@@ -44,6 +44,7 @@ func main() {
 	// }
 
 	kafkaWriter := queue.NewWriter(kafkaCfg)
+	defer func() { _ = kafkaWriter.Close() }()
 
 	router := router.NewRouters(config, kafkaWriter, kafkaCfg.KafkaTopic)
 

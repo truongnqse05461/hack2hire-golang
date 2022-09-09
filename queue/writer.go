@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"crypto/tls"
 	"hack2hire-2022/worker/config"
 	"log"
 	"strings"
@@ -10,23 +11,24 @@ import (
 )
 
 func NewWriter(config config.Conf) *kafka.Writer {
-	var dialer *kafka.Dialer
+	var tlsConfig *tls.Config
+	var err error
 	if config.KafkaTLSEnabled {
-		tlsConfig, err := newTLSConfig(config.KafkaTLSClientCert, config.KafkaTLSClientKey, config.KafkaTLSCACertFile)
+		tlsConfig, err = newTLSConfig(config.KafkaTLSClientCert, config.KafkaTLSClientKey, config.KafkaTLSCACertFile)
 		if err != nil {
 			log.Fatal(nil, "setup kafka TLS error", err)
 		}
 		tlsConfig.InsecureSkipVerify = true
-		dialer = &kafka.Dialer{
-			Timeout:   10 * time.Second,
-			DualStack: true,
-			TLS:       tlsConfig,
-		}
 	}
 
-	return kafka.NewWriter(kafka.WriterConfig{
-		Brokers:  strings.Split(config.KafkaBrokers, ","),
-		Balancer: &kafka.Hash{},
-		Dialer:   dialer,
-	})
+	return &kafka.Writer{
+		Addr:                   kafka.TCP(strings.Split(config.KafkaBrokers, ",")...),
+		Balancer:               &kafka.Hash{},
+		BatchTimeout:           10 * time.Millisecond,
+		Topic:                  config.KafkaTopic,
+		AllowAutoTopicCreation: true,
+		Transport: &kafka.Transport{
+			TLS: tlsConfig,
+		},
+	}
 }

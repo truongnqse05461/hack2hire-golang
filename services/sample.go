@@ -27,7 +27,7 @@ func (s *sampleService) Save(bookings model.Bookings) error {
 		return err
 	}
 	err = s.writer.WriteMessages(context.Background(), kafka.Message{
-		Topic: s.kafkaTopic,
+		// Topic: s.kafkaTopic,
 		Value: data,
 	})
 	if err != nil {
