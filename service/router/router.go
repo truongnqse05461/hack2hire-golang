@@ -1,11 +1,12 @@
 package router
 
 import (
-	"github.com/gin-gonic/gin"
 	"hack2hire-2022/service/config"
 	"hack2hire-2022/service/handler"
 	"hack2hire-2022/services"
 	"log"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Router struct {
@@ -29,7 +30,7 @@ func (r *Router) InitGin() (*gin.Engine, error) {
 	engine.GET("/health", newHandler.Health)
 	sampleGroup := engine.Group("/sample")
 	{
-		sampleGroup.GET("/hello", newHandler.GetMessage)
+		sampleGroup.GET("/hello/:id", newHandler.GetMessage)
 	}
 	return engine, nil
 }

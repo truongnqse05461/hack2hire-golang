@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"hack2hire-2022/worker/config"
 	"io/ioutil"
 	"log"
 	"strings"
@@ -32,7 +33,7 @@ func (h consumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, cla
 }
 
 func main() {
-	config, err := Load()
+	config, err := config.Load()
 	if err != nil {
 		panic(err)
 	}
@@ -45,7 +46,7 @@ func main() {
 	consumeMessage(client, config)
 }
 
-func consumeMessage(client sarama.Client, config Conf) {
+func consumeMessage(client sarama.Client, config config.Conf) {
 	group, err := sarama.NewConsumerGroupFromClient(config.KafkaConsumerGroup, client)
 	if err != nil {
 		log.Fatal(nil, "error on initialing kafka connection", err)
@@ -91,7 +92,7 @@ func consumeMessage(client sarama.Client, config Conf) {
 	}
 }
 
-func newKafkaClient(config Conf) (sarama.Client, error) {
+func newKafkaClient(config config.Conf) (sarama.Client, error) {
 	configKafka := sarama.NewConfig()
 	configKafka.Version = sarama.V1_0_0_0
 	configKafka.Consumer.Return.Errors = true

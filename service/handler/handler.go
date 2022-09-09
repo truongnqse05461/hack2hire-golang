@@ -1,12 +1,13 @@
 package handler
 
 import (
-	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	"hack2hire-2022/dtos"
 	"hack2hire-2022/services"
 	"net/http"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 type Handler struct {
@@ -25,12 +26,13 @@ func (h *Handler) Health(ctx *gin.Context) {
 }
 
 func (h *Handler) GetMessage(ctx *gin.Context) {
-	id, ok := ctx.Request.URL.Query()["id"]
-	if !ok || len(id) <= 0 {
-		ctx.JSON(http.StatusBadRequest, gin.H{"message": "invalid request"})
+	id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	if err != nil {
+		zap.L().Error("parse request failed", zap.String("error", err.Error()))
+		ctx.JSON(http.StatusBadRequest, "bad request")
+		return
 	}
-	IDint, err := strconv.ParseInt(id[0], 10, 64)
-	message, err := h.sampleService.SayHello(IDint)
+	message, err := h.sampleService.SayHello(id)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, dtos.Response{
 			Data: nil,
@@ -45,4 +47,5 @@ func (h *Handler) GetMessage(ctx *gin.Context) {
 		"message": message,
 	})
 	return
+
 }
