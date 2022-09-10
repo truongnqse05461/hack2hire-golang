@@ -153,42 +153,7 @@ func (h *Handler) GetReservations(ctx *gin.Context) {
 
 }
 
-func (h *Handler) SaveReservation(ctx *gin.Context) {
-	showId := ctx.Param("id")
-	if showId == "" {
-		ctx.JSON(http.StatusBadRequest, "bad request")
-		return
-	}
-
-	var req dtos.BookingReq
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		zap.L().Error("parse request failed", zap.String("error", err.Error()))
-		ctx.JSON(http.StatusBadRequest, "bad request")
-		return
-	}
-	// err := h.bookingService.Save(model.Reservation{
-	// 	User: model.User{
-	// 		Name:        req.User.Name,
-	// 		PhoneNumber: req.User.PhoneNumber,
-	// 	},
-	// 	SeatCodes: req.SeatCodes,
-	// })
-	// if err != nil {
-	// 	ctx.JSON(http.StatusInternalServerError, dtos.Response{
-	// 		Data: nil,
-	// 		Meta: dtos.Meta{
-	// 			Message:    err.Error(),
-	// 			StatusCode: http.StatusInternalServerError,
-	// 		},
-	// 	})
-	// 	return
-	// }
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "success",
-	})
-}
-
-func (h *Handler) SaveShows(ctx *gin.Context) {
+func (h *Handler) SaveShow(ctx *gin.Context) {
 	var req dtos.SaveShowsReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		zap.L().Error("parse request failed", zap.String("error", err.Error()))
@@ -207,5 +172,45 @@ func (h *Handler) SaveShows(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "success",
+	})
+}
+
+func (h *Handler) SaveReservation(ctx *gin.Context) {
+	showId := ctx.Param("show_id")
+	if showId == "" {
+		ctx.JSON(http.StatusBadRequest, dtos.Response{
+			Data: nil,
+			Meta: dtos.Meta{
+				Message:    "bad request",
+				StatusCode: http.StatusBadRequest,
+			},
+		})
+		return
+	}
+
+	var req dtos.BookingReq
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		zap.L().Error("parse request failed", zap.String("error", err.Error()))
+		ctx.JSON(http.StatusBadRequest, "bad request")
+		return
+	}
+	req.ShowId = showId
+
+	if err := h.bookingService.PublishReservation(ctx, req); err != nil {
+		ctx.JSON(http.StatusInternalServerError, dtos.Response{
+			Data: nil,
+			Meta: dtos.Meta{
+				Message:    err.Error(),
+				StatusCode: http.StatusInternalServerError,
+			},
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, dtos.Response{
+		Data: nil,
+		Meta: dtos.Meta{
+			Message:    OK,
+			StatusCode: http.StatusOK,
+		},
 	})
 }

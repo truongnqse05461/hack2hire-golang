@@ -156,11 +156,11 @@ func (db *DB) GetReservations(ctx context.Context, showId, phoneNum string, seat
 	return reservations, nil
 }
 
-func (db *DB) GetSeatByCode(ctx context.Context, seatCode string) (model.Seat, error) {
-	query := `SELECT * FROM seats WHERE code = ?`
+func (db *DB) GetSeatByCode(ctx context.Context, seatCode, showId string) (model.Seat, error) {
+	query := `SELECT * FROM seats WHERE code = ? AND show_id = ?`
 
 	var seat model.Seat
-	if err := db.db.QueryRowxContext(ctx, query, seatCode).StructScan(&seat); err != nil {
+	if err := db.db.QueryRowxContext(ctx, query, seatCode, showId).StructScan(&seat); err != nil {
 		return model.Seat{}, err
 	}
 	return seat, nil

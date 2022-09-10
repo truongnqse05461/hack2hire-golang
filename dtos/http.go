@@ -18,6 +18,7 @@ type User struct {
 }
 
 type BookingReq struct {
+	ShowId    string
 	User      User     `json:"user" binding:"required"`
 	SeatCodes []string `json:"seat_codes" binding:"required"`
 }
