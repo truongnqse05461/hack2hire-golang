@@ -87,9 +87,9 @@ func NewDB(dialect, dbName, urlConnection string) (*DB, error) {
 		return nil, errors.Wrap(err, "ping db error")
 	}
 	db.SetConnMaxLifetime(10 * time.Minute)
-	if err := migrateDB(db); err != nil {
-		return nil, err
-	}
+	// if err := migrateDB(db); err != nil {
+	// 	return nil, err
+	// }
 	return &DB{
 		db: db,
 	}, nil
