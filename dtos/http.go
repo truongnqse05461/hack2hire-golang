@@ -10,7 +10,12 @@ type Meta struct {
 	Message    string `json:"message"`
 }
 
+type User struct {
+	Name        string `json:"name" binding:"required"`
+	PhoneNumber string `json:"phone_number" binding:"required"`
+}
+
 type BookingReq struct {
-	ID      int64  `json:"id" binding:"required"`
-	Message string `json:"message" binding:"required"`
+	User      User     `json:"user" binding:"required"`
+	SeatCodes []string `json:"seat_codes" binding:"required"`
 }

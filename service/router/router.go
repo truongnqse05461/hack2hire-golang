@@ -30,8 +30,8 @@ func (r *Router) InitGin() (*gin.Engine, error) {
 	if err != nil {
 		log.Panic("Connect DB failed", err)
 	}
-	sampleService := services.NewService(db, r.writer, r.kafkaTopic)
-	newHandler := handler.NewHandler(sampleService)
+	bookingService := services.NewService(db, r.writer, r.kafkaTopic)
+	newHandler := handler.NewHandler(bookingService)
 	engine := gin.New()
 	engine.GET("/health", newHandler.Health)
 	sampleGroup := engine.Group("/sample")

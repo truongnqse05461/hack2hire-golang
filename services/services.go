@@ -9,19 +9,19 @@ import (
 	"go.uber.org/zap"
 )
 
-type SampleService interface {
+type BookingService interface {
 	SayHello(id int64) (string, error)
 	Save(bookings model.Bookings) error
 }
 
-type sampleService struct {
+type bookingService struct {
 	db         *DB
 	writer     *kafka.Writer
 	kafkaTopic string
 }
 
-// Save implements SampleService
-func (s *sampleService) Save(bookings model.Bookings) error {
+// Save implements BookingService
+func (s *bookingService) Save(bookings model.Bookings) error {
 	data, err := json.Marshal(bookings)
 	if err != nil {
 		return err
@@ -37,7 +37,7 @@ func (s *sampleService) Save(bookings model.Bookings) error {
 	return nil
 }
 
-func (s *sampleService) SayHello(id int64) (string, error) {
+func (s *bookingService) SayHello(id int64) (string, error) {
 	message, err := s.db.GetMessage(uint64(id))
 	if err != nil {
 		return "", err
@@ -45,8 +45,8 @@ func (s *sampleService) SayHello(id int64) (string, error) {
 	return message, nil
 }
 
-var _ SampleService = (*sampleService)(nil)
+var _ BookingService = (*bookingService)(nil)
 
-func NewService(db *DB, writer *kafka.Writer, topic string) SampleService {
-	return &sampleService{db: db, writer: writer, kafkaTopic: topic}
+func NewService(db *DB, writer *kafka.Writer, topic string) BookingService {
+	return &bookingService{db: db, writer: writer, kafkaTopic: topic}
 }

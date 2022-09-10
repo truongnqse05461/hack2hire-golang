@@ -12,11 +12,11 @@ import (
 )
 
 type Handler struct {
-	sampleService services.SampleService
+	bookingService services.BookingService
 }
 
-func NewHandler(sampleService services.SampleService) Handler {
-	return Handler{sampleService: sampleService}
+func NewHandler(bookingService services.BookingService) Handler {
+	return Handler{bookingService: bookingService}
 }
 
 func (h *Handler) Health(ctx *gin.Context) {
@@ -33,7 +33,7 @@ func (h *Handler) GetMessage(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, "bad request")
 		return
 	}
-	message, err := h.sampleService.SayHello(id)
+	message, err := h.bookingService.SayHello(id)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, dtos.Response{
 			Data: nil,
@@ -52,13 +52,25 @@ func (h *Handler) GetMessage(ctx *gin.Context) {
 }
 
 func (h *Handler) SaveBookings(ctx *gin.Context) {
+	showId := ctx.Param("id")
+	if showId == "" {
+		ctx.JSON(http.StatusBadRequest, "bad request")
+		return
+	}
+
 	var req dtos.BookingReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		zap.L().Error("parse request failed", zap.String("error", err.Error()))
 		ctx.JSON(http.StatusBadRequest, "bad request")
 		return
 	}
-	err := h.sampleService.Save(model.Bookings{ID: req.ID, Message: req.Message})
+	err := h.bookingService.Save(model.Bookings{
+		User: model.User{
+			Name:        req.User.Name,
+			PhoneNumber: req.User.PhoneNumber,
+		},
+		SeatCodes: req.SeatCodes,
+	})
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, dtos.Response{
 			Data: nil,
@@ -72,6 +84,4 @@ func (h *Handler) SaveBookings(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "success",
 	})
-	return
-
 }
