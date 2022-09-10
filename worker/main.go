@@ -6,6 +6,7 @@ import (
 	"hack2hire-2022/service/config"
 	"hack2hire-2022/services"
 	workerCfg "hack2hire-2022/worker/config"
+	workerSvc "hack2hire-2022/worker/service"
 	"log"
 )
 
@@ -33,7 +34,7 @@ func main() {
 	reader := queue.NewReader(kafkaCfg)
 	defer func() { _ = reader.Close() }()
 
-	handler := NewHandler(bookingService, reader)
+	handler := workerSvc.NewHandler(bookingService, reader)
 
 	handler.ConsumeMessages(context.Background())
 }

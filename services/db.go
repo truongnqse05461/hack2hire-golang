@@ -13,24 +13,10 @@ import (
 )
 
 type DB struct {
-	// db *gorm.DB
 	db *sqlx.DB
 }
 
 func NewDB(dialect, urlConnection string) (*DB, error) {
-	// db, err := gorm.Open(dialect, urlConnection)
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "open mysql connection error")
-	// }
-
-	// if err = db.DB().Ping(); err != nil {
-	// 	return nil, errors.Wrap(err, "ping db error")
-	// }
-
-	// db.DB().SetConnMaxLifetime(10 * time.Minute)
-	// return &DB{
-	// 	db: db,
-	// }, nil
 	db, err := sqlx.Connect(dialect, urlConnection)
 	if err != nil {
 		return nil, errors.Wrap(err, "open mysql connection error")
@@ -60,10 +46,10 @@ func (db *DB) SaveReservation(ctx context.Context, reservations ...model.Reserva
 	if err != nil {
 		return err
 	}
-	query := `INSERT INTO reservations (id, code, status, booked_date, user_name, user_phone, seat_id)
-			VALUES (:id, :code, :status, :booked_date, :user_name, :user_phone, :seat_id)`
+	query := `INSERT INTO reservations (id, code, status, booked_date, canceled_date, canceled_reason, user_name, user_phone, seat_id)
+			VALUES (:id, :code, :status, :booked_date, :canceled_date, :canceled_reason, :user_name, :user_phone, :seat_id)`
 	for _, b := range reservations {
-
+		b.Status = "ACCEPTED"
 		if _, err := tx.NamedExecContext(ctx, query, b); err != nil {
 			_ = tx.Rollback()
 			return err

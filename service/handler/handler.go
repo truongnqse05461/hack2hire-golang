@@ -153,7 +153,7 @@ func (h *Handler) GetReservations(ctx *gin.Context) {
 
 }
 
-func (h *Handler) SaveShow(ctx *gin.Context) {
+func (h *Handler) SaveShows(ctx *gin.Context) {
 	var req dtos.SaveShowsReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		zap.L().Error("parse request failed", zap.String("error", err.Error()))

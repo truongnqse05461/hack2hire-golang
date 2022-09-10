@@ -54,6 +54,7 @@ func (r *Router) InitGin() (*gin.Engine, error) {
 		bookingGroup.GET("/shows", newHandler.GetShows)
 		bookingGroup.GET("/shows/:show_id/seats", newHandler.GetSeats)
 		bookingGroup.GET("/shows/:show_id/reservations", newHandler.GetReservations)
+		bookingGroup.POST("/shows/:show_id/reservations", newHandler.SaveReservation)
 
 		bookingGroup.POST("/shows", newHandler.SaveShows)
 	}

@@ -1,10 +1,10 @@
-package main
+package service
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"hack2hire-2022/model"
+	"hack2hire-2022/dtos"
 	"hack2hire-2022/services"
 	"log"
 
@@ -31,10 +31,17 @@ func (r *ReservationHandler) ConsumeMessages(ctx context.Context) {
 			_ = fmt.Errorf("error %v", err)
 		}
 		fmt.Printf("receive event on broker %s, topic %s, partition %d, offset %d, data %s\n", r.reader.Config().Brokers, m.Topic, m.Partition, m.Offset, string(m.Value))
-		var reservation model.Reservation
-		if err := json.Unmarshal(m.Value, &reservation); err != nil {
+		var message dtos.PublishReservationMessage
+		if err := json.Unmarshal(m.Value, &message); err != nil {
 			_ = fmt.Errorf("error %v", err)
 		}
-		r.bookingSvc.SaveReservation(ctx, reservation)
+		err = r.bookingSvc.SaveReservation(ctx, message.Reservations...)
+		if err != nil {
+			_ = fmt.Errorf("error %v", err)
+			//notification booking failed
+			_ = r.bookingSvc.Notifications(ctx, nil)
+		}
+		//notification booking sucess
+		_ = r.bookingSvc.Notifications(ctx, nil)
 	}
 }

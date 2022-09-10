@@ -7,6 +7,7 @@ import (
 	"hack2hire-2022/dtos"
 	"hack2hire-2022/model"
 	"hack2hire-2022/utils"
+	"time"
 
 	"github.com/hashicorp/go-uuid"
 
@@ -35,6 +36,7 @@ type bookingService struct {
 // PublishReservation implements BookingService
 func (b *bookingService) PublishReservation(ctx context.Context, req dtos.BookingReq) error {
 	var reservations []model.Reservation
+	date := time.Now().UnixMilli()
 	for _, code := range req.SeatCodes {
 		seat, err := b.db.GetSeatByCode(ctx, code, req.ShowId)
 		if err != nil {
@@ -49,10 +51,11 @@ func (b *bookingService) PublishReservation(ctx context.Context, req dtos.Bookin
 			return err
 		}
 		reservation := model.Reservation{
-			ID:     id,
-			Code:   code,
-			ShowId: req.ShowId,
-			SeatId: seat.ID,
+			ID:         id,
+			Code:       code,
+			ShowId:     req.ShowId,
+			SeatId:     seat.ID,
+			BookedDate: date,
 			User: model.User{
 				Name:        req.User.Name,
 				PhoneNumber: req.User.PhoneNumber,
