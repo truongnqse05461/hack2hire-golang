@@ -2,7 +2,9 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"hack2hire-2022/model"
+	"strings"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -53,14 +55,14 @@ func (db *DB) GetMessage(id uint64) (string, error) {
 	return message, nil
 }
 
-func (db *DB) SaveReservation(ctx context.Context, bookings ...model.Bookings) error {
+func (db *DB) SaveReservation(ctx context.Context, reservations ...model.Reservation) error {
 	tx, err := db.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	query := `INSERT INTO reservations (id, code, status, booked_date, user_name, user_phone, seat_id)
 			VALUES (:id, :code, :status, :booked_date, :user_name, :user_phone, :seat_id)`
-	for _, b := range bookings {
+	for _, b := range reservations {
 
 		if _, err := tx.NamedExecContext(ctx, query, b); err != nil {
 			_ = tx.Rollback()
@@ -118,6 +120,40 @@ func (db *DB) GetSeats(ctx context.Context, showId string) ([]model.Seat, error)
 		seats = append(seats, seat)
 	}
 	return seats, nil
+}
+
+func (db *DB) GetReservations(ctx context.Context, showId, phoneNum string, seatCodes ...string) ([]model.Reservation, error) {
+	query := `SELECT r.*, s.code as seat_code, s.show_id as show_id FROM reservations r 
+			JOIN seats s 
+			ON r.seat_id = s.id 
+			WHERE s.show_id = :show_id`
+
+	if phoneNum != "" {
+		query += ` AND r.user_phone = :user_phone `
+	}
+	if len(seatCodes) > 0 {
+		query += fmt.Sprintf(` AND s.code in ('%s')`, strings.Join(seatCodes, "','"))
+	}
+
+	params := map[string]interface{}{
+		"show_id":    showId,
+		"user_phone": phoneNum,
+	}
+
+	rows, err := db.db.NamedQueryContext(ctx, query, params)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = rows.Close() }()
+	var reservations []model.Reservation
+	for rows.Next() {
+		var reservation model.Reservation
+		if err := rows.StructScan(&reservation); err != nil {
+			return nil, err
+		}
+		reservations = append(reservations, reservation)
+	}
+	return reservations, nil
 }
 
 func (db *DB) GetSeatByCode(ctx context.Context, seatCode string) (model.Seat, error) {

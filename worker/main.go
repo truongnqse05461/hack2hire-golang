@@ -3,25 +3,37 @@ package main
 import (
 	"context"
 	"hack2hire-2022/queue"
-	"hack2hire-2022/worker/config"
+	"hack2hire-2022/service/config"
+	"hack2hire-2022/services"
+	workerCfg "hack2hire-2022/worker/config"
+	"log"
 )
 
 func main() {
-	config, err := config.Load()
+	config, err := config.GetConfig()
+	if err != nil {
+		log.Panic("Failed to get config", err)
+	}
+
+	kafkaCfg, err := workerCfg.Load()
 	if err != nil {
 		panic(err)
 	}
 
-	reader := queue.NewReader(config)
+	db, err := services.NewDB("mysql", config.MysqlURL)
+	if err != nil {
+		log.Panic("Connect DB failed", err)
+	}
+
+	kafkaWriter := queue.NewWriter(kafkaCfg)
+	defer func() { _ = kafkaWriter.Close() }()
+
+	bookingService := services.NewService(db, kafkaWriter, kafkaCfg.KafkaTopic)
+
+	reader := queue.NewReader(kafkaCfg)
 	defer func() { _ = reader.Close() }()
 
-	queue.ConsumeMessages(context.Background(), reader)
+	handler := NewHandler(bookingService, reader)
 
-	//sarama kafka
-	// client, err := queue.NewKafkaClient(config)
-	// if err != nil {
-	// 	log.Fatal(nil, "cannot start kafka client", err)
-	// }
-	// defer func() { _ = client.Close() }()
-	// queue.ConsumeMessage(client, config)
+	handler.ConsumeMessages(context.Background())
 }

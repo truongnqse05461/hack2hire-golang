@@ -3,6 +3,7 @@ package handler
 import (
 	"hack2hire-2022/dtos"
 	"hack2hire-2022/services"
+	"hack2hire-2022/utils"
 	"net/http"
 	"strconv"
 
@@ -89,11 +90,15 @@ func (h *Handler) GetSeats(ctx *gin.Context) {
 	}
 	seats, err := h.bookingService.GetSeats(ctx, showId)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, dtos.Response{
+		code := http.StatusInternalServerError
+		if err.Error() == utils.ErrShowNotFound {
+			code = http.StatusNotFound
+		}
+		ctx.JSON(code, dtos.Response{
 			Data: nil,
 			Meta: dtos.Meta{
 				Message:    err.Error(),
-				StatusCode: http.StatusInternalServerError,
+				StatusCode: code,
 			},
 		})
 		return
@@ -108,7 +113,47 @@ func (h *Handler) GetSeats(ctx *gin.Context) {
 
 }
 
-func (h *Handler) SaveBookings(ctx *gin.Context) {
+func (h *Handler) GetReservations(ctx *gin.Context) {
+	showId := ctx.Param("show_id")
+	if showId == "" {
+		ctx.JSON(http.StatusBadRequest, dtos.Response{
+			Data: nil,
+			Meta: dtos.Meta{
+				Message:    "bad request",
+				StatusCode: http.StatusBadRequest,
+			},
+		})
+		return
+	}
+	phoneNum := ctx.Query("phone_number")
+	seatCodes := ctx.QueryArray("seat_codes")
+
+	data, err := h.bookingService.GetReservations(ctx, showId, phoneNum, seatCodes...)
+	if err != nil {
+		code := http.StatusInternalServerError
+		if err.Error() == utils.ErrShowNotFound {
+			code = http.StatusNotFound
+		}
+		ctx.JSON(code, dtos.Response{
+			Data: nil,
+			Meta: dtos.Meta{
+				Message:    err.Error(),
+				StatusCode: code,
+			},
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, dtos.Response{
+		Data: dtos.ReservationRes{Total: len(data), Reservations: data},
+		Meta: dtos.Meta{
+			Message:    OK,
+			StatusCode: http.StatusOK,
+		},
+	})
+
+}
+
+func (h *Handler) SaveReservation(ctx *gin.Context) {
 	showId := ctx.Param("id")
 	if showId == "" {
 		ctx.JSON(http.StatusBadRequest, "bad request")
@@ -121,7 +166,7 @@ func (h *Handler) SaveBookings(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, "bad request")
 		return
 	}
-	// err := h.bookingService.Save(model.Bookings{
+	// err := h.bookingService.Save(model.Reservation{
 	// 	User: model.User{
 	// 		Name:        req.User.Name,
 	// 		PhoneNumber: req.User.PhoneNumber,

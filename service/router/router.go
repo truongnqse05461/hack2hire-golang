@@ -35,14 +35,14 @@ func (r *Router) InitGin() (*gin.Engine, error) {
 	}
 	bookingService := services.NewService(db, r.writer, r.kafkaTopic)
 
-	go func() {
-		err := generateSeats(bookingService)
-		if err != nil {
-			fmt.Printf("err generate seats: %s\n", err)
-			return
-		}
-		fmt.Printf("generate seats success\n")
-	}()
+	// go func() {
+	// 	err := generateSeats(bookingService)
+	// 	if err != nil {
+	// 		fmt.Printf("err generate seats: %s\n", err)
+	// 		return
+	// 	}
+	// 	fmt.Printf("generate seats success\n")
+	// }()
 
 	newHandler := handler.NewHandler(bookingService)
 	engine := gin.New()
@@ -53,6 +53,7 @@ func (r *Router) InitGin() (*gin.Engine, error) {
 		//hack2hire
 		bookingGroup.GET("/shows", newHandler.GetShows)
 		bookingGroup.GET("/shows/:show_id/seats", newHandler.GetSeats)
+		bookingGroup.GET("/shows/:show_id/reservations", newHandler.GetReservations)
 
 		bookingGroup.POST("/shows", newHandler.SaveShows)
 	}

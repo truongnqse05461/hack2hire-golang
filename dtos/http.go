@@ -35,3 +35,8 @@ type SeatRes struct {
 	Total int          `json:"total"`
 	Seats []model.Seat `json:"seat_list"`
 }
+
+type ReservationRes struct {
+	Total        int                 `json:"total"`
+	Reservations []model.Reservation `json:"reservations"`
+}
