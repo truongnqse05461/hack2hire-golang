@@ -1,11 +1,11 @@
-create table shows (
+create table if not exists shows (
 	id varchar(255) primary key,
     name varchar(255),
     start_date bigint,
     image_url text
 );
 
-create table reservations (
+create table if not exists reservations (
 	id varchar(255) primary key,
     code varchar(255),
     status varchar(255),
@@ -17,7 +17,7 @@ create table reservations (
     seat_id varchar(255)
 );
 
-create table seats (
+create table if not exists seats (
 	id varchar(255) primary key,
     code varchar(255),
     show_id varchar(255),

@@ -29,7 +29,7 @@ func NewRouters(config *config.Config, writer *kafka.Writer, topic string) *Rout
 }
 
 func (r *Router) InitGin() (*gin.Engine, error) {
-	db, err := services.NewDB("mysql", r.config.MysqlURL)
+	db, err := services.NewDB("mysql", r.config.MysqlDatabase, r.config.MysqlURL)
 	if err != nil {
 		log.Panic("Connect DB failed", err)
 	}

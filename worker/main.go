@@ -21,7 +21,7 @@ func main() {
 		panic(err)
 	}
 
-	db, err := services.NewDB("mysql", config.MysqlURL)
+	db, err := services.NewDB("mysql", config.MysqlDatabase, config.MysqlURL)
 	if err != nil {
 		log.Panic("Connect DB failed", err)
 	}

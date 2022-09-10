@@ -10,13 +10,75 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
+	migrate "github.com/rubenv/sql-migrate"
 )
 
 type DB struct {
 	db *sqlx.DB
 }
 
-func NewDB(dialect, urlConnection string) (*DB, error) {
+func migrateDB(db *sqlx.DB) error {
+	migrations := &migrate.MemoryMigrationSource{
+		Migrations: []*migrate.Migration{
+			{
+				Id: "bookings_1",
+				Up: []string{
+					`create table if not exists shows (
+						id varchar(255) primary key,
+						name varchar(255),
+						start_date bigint,
+						image_url text
+					)`,
+					`create table if not exists seats (
+						id varchar(255) primary key,
+						code varchar(255),
+						show_id varchar(255),
+						status varchar(255)
+					)`,
+					`create table if not exists reservations (
+						id varchar(255) primary key,
+						code varchar(255),
+						status varchar(255),
+						booked_date bigint,
+						canceled_date bigint,
+						canceled_reason text,
+						user_name varchar(255),
+						user_phone varchar(255),
+						seat_id varchar(255)
+					)`,
+				},
+				Down: []string{
+					"DROP TABLE shows",
+					"DROP TABLE seats",
+					"DROP TABLE reservations",
+				},
+			},
+			{
+				Id: "bookings_2",
+				Up: []string{
+					`alter table reservations add constraint unq_seat_id_status unique (seat_id, status)`,
+				},
+			},
+			{
+				Id: "bookings_3",
+				Up: []string{
+					``,
+				},
+			},
+			{
+				Id: "bookings_4",
+				Up: []string{
+					``,
+				},
+			},
+		},
+	}
+
+	_, err := migrate.Exec(db.DB, "postgres", migrations, migrate.Up)
+	return err
+}
+
+func NewDB(dialect, dbName, urlConnection string) (*DB, error) {
 	db, err := sqlx.Connect(dialect, urlConnection)
 	if err != nil {
 		return nil, errors.Wrap(err, "open mysql connection error")
@@ -25,6 +87,9 @@ func NewDB(dialect, urlConnection string) (*DB, error) {
 		return nil, errors.Wrap(err, "ping db error")
 	}
 	db.SetConnMaxLifetime(10 * time.Minute)
+	if err := migrateDB(db); err != nil {
+		return nil, err
+	}
 	return &DB{
 		db: db,
 	}, nil
