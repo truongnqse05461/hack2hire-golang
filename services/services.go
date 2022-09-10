@@ -12,12 +12,36 @@ import (
 type BookingService interface {
 	SayHello(id int64) (string, error)
 	Save(bookings model.Bookings) error
+	GetShows(ctx context.Context) ([]model.Show, error)
+	GetSeats(ctx context.Context, showId string) ([]model.Seat, error)
+	SaveShows(ctx context.Context, shows ...model.Show) error
+	SaveSeats(ctx context.Context, seats ...model.Seat) error
 }
 
 type bookingService struct {
 	db         *DB
 	writer     *kafka.Writer
 	kafkaTopic string
+}
+
+// SaveSeats implements BookingService
+func (b *bookingService) SaveSeats(ctx context.Context, seats ...model.Seat) error {
+	return b.db.SaveSeats(ctx, seats...)
+}
+
+// SaveShows implements BookingService
+func (b *bookingService) SaveShows(ctx context.Context, shows ...model.Show) error {
+	return b.db.SaveShows(ctx, shows...)
+}
+
+// GetSeats implements BookingService
+func (b *bookingService) GetSeats(ctx context.Context, showId string) ([]model.Seat, error) {
+	return b.db.GetSeats(ctx, showId)
+}
+
+// GetShows implements BookingService
+func (b *bookingService) GetShows(ctx context.Context) ([]model.Show, error) {
+	return b.db.GetShows(ctx)
 }
 
 // Save implements BookingService

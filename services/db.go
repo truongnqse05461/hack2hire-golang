@@ -92,6 +92,15 @@ func (db *DB) GetShows(ctx context.Context) ([]model.Show, error) {
 	return shows, nil
 }
 
+func (db *DB) GetShowByID(ctx context.Context, id string) (show model.Show, err error) {
+	query := `SELECT * FROM shows WHERE id = ?`
+
+	if err := db.db.QueryRowxContext(ctx, query, id).StructScan(&show); err != nil {
+		return model.Show{}, err
+	}
+	return show, nil
+}
+
 func (db *DB) GetSeats(ctx context.Context, showId string) ([]model.Seat, error) {
 	query := `SELECT * FROM seats WHERE show_id = ?`
 
@@ -119,4 +128,44 @@ func (db *DB) GetSeatByCode(ctx context.Context, seatCode string) (model.Seat, e
 		return model.Seat{}, err
 	}
 	return seat, nil
+}
+
+func (db *DB) SaveShows(ctx context.Context, shows ...model.Show) error {
+	tx, err := db.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	query := `INSERT INTO shows (id, name, start_date, image_url)
+			VALUES (:id, :name, :start_date, :image_url)`
+	for _, s := range shows {
+
+		if _, err := tx.NamedExecContext(ctx, query, s); err != nil {
+			_ = tx.Rollback()
+			return err
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (db *DB) SaveSeats(ctx context.Context, seats ...model.Seat) error {
+	tx, err := db.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	query := `INSERT INTO seats (id, code, show_id, status)
+			VALUES (:id, :code, :show_id, :status)`
+	for _, s := range seats {
+
+		if _, err := tx.NamedExecContext(ctx, query, s); err != nil {
+			_ = tx.Rollback()
+			return err
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+	return nil
 }
